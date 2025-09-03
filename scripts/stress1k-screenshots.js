@@ -10,7 +10,7 @@ function loadSymbolsFromJson(jsonPath) {
   if (!existsSync(jsonPath)) throw new Error(`Missing JSON: ${jsonPath}`);
   const coins = JSON.parse(readFileSync(jsonPath, 'utf8'));
   const excluded = new Set(['usdt','usdc','usd','dai','busd','tusd','usdp','usdd','frax','lusd','susd','gusd','usds','usde','usdf','usdt0','usdtb']);
-  const blacklist = new Set(['eth','xrp']);
+  const blacklist = new Set(['btc','eth','xrp']);
   const symbols = coins
     .map(c => (c?.symbol ?? '').toString().toUpperCase())
     .filter(s => s && !excluded.has(s.toLowerCase()) && !blacklist.has(s.toLowerCase()));
