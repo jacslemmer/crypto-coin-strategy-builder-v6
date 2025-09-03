@@ -239,8 +239,9 @@ async function pairImages(trendsDir) {
   const croppedFiles = files.filter(f => f.toLowerCase().includes('_cropped'));
   
   for (const croppedFile of croppedFiles) {
-    // Extract symbol (e.g., "ADA_cropped.png" -> "ADA")
-    const symbol = croppedFile.split('_')[0].toUpperCase();
+    // Extract symbol robustly from filenames like BTCUSDT_..._cropped.png or ADA_cropped.png
+    const firstToken = croppedFile.split('_')[0].toUpperCase();
+    const symbol = firstToken.endsWith('USDT') ? firstToken.slice(0, -4) : firstToken;
     
     // Find matching original: SYMBOLUSDT_*.png
     const originalFile = files.find(f => {
