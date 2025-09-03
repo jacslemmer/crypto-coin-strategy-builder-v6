@@ -1,7 +1,11 @@
 /**
+ * Archived on 2025-09-03: Previous URL generator (direct USDT pair, no ETH normalization)
+ */
+
+/**
  * TradingView URL Generator
  * 
- * Generates TradingView chart URLs for synthetic ETH-normalized pairs
+ * Generates TradingView chart URLs for cryptocurrency pairs
  */
 
 /**
@@ -11,41 +15,30 @@
  * @param {string} timeframe - Chart timeframe (default: '12M' for 12 months)
  * @returns {string} TradingView chart URL
  */
-export function generateTradingViewUrl(symbol, interval = 'D', exchange = 'BINANCE', multiplier = 10000) {
-  const upper = symbol.toUpperCase();
-  // Synthetic normalized symbol: 10000*BINANCE:[COIN]USDT/BINANCE:ETHUSDT
-  const synth = `${multiplier}*${exchange}:${upper}USDT/${exchange}:ETHUSDT`;
+export function generateTradingViewUrl(symbol, interval = '1D', timeframe = '12M') {
+  const pairSymbol = `${symbol.toUpperCase()}USDT`;
   const baseUrl = 'https://www.tradingview.com/chart/';
   const params = new URLSearchParams({
-    symbol: synth,
-    interval: interval
+    symbol: pairSymbol,
+    interval: interval,
+    timeframe: timeframe
   });
   return `${baseUrl}?${params.toString()}`;
 }
 
 /**
  * Generate URLs for multiple cryptocurrency pairs
- * @param {Array} symbols - Array of cryptocurrency symbols
- * @param {string} interval - Chart interval (default: '1D')
- * @param {string} timeframe - Chart timeframe (default: '12M')
- * @returns {Array} Array of objects with symbol and URL
  */
-export function generateTradingViewUrls(symbols, interval = 'D', exchange = 'BINANCE', multiplier = 10000) {
+export function generateTradingViewUrls(symbols, interval = '1D', timeframe = '12M') {
   return symbols.map(symbol => ({
     symbol: symbol.toUpperCase(),
     pair: `${symbol.toUpperCase()}USDT`,
-    url: generateTradingViewUrl(symbol, interval, exchange, multiplier),
+    url: generateTradingViewUrl(symbol, interval, timeframe),
     interval,
-    exchange,
-    multiplier
+    timeframe
   }));
 }
 
-/**
- * Validate TradingView URL format
- * @param {string} url - URL to validate
- * @returns {boolean} True if URL is valid TradingView chart URL
- */
 export function validateTradingViewUrl(url) {
   try {
     const urlObj = new URL(url);
@@ -53,16 +46,11 @@ export function validateTradingViewUrl(url) {
            urlObj.pathname === '/chart/' &&
            urlObj.searchParams.has('symbol') &&
            urlObj.searchParams.has('interval');
-  } catch (error) {
+  } catch {
     return false;
   }
 }
 
-/**
- * Extract symbol from TradingView URL
- * @param {string} url - TradingView URL
- * @returns {string|null} Extracted symbol or null if invalid
- */
 export function extractSymbolFromUrl(url) {
   try {
     const urlObj = new URL(url);
@@ -71,11 +59,9 @@ export function extractSymbolFromUrl(url) {
       return symbol.replace('USDT', '');
     }
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
-
-
 
 

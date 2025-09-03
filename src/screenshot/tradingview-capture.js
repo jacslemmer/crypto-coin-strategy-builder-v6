@@ -115,7 +115,7 @@ export class TradingViewCapture {
       };
     }
 
-    const url = generateTradingViewUrl(symbol);
+    const url = generateTradingViewUrl(symbol, 'D', 'BINANCE', 10000);
     console.log(`📸 Capturing ${symbol}USDT chart...`);
 
     try {
