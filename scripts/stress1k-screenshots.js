@@ -10,7 +10,7 @@ function loadSymbolsFromJson(jsonPath) {
   if (!existsSync(jsonPath)) throw new Error(`Missing JSON: ${jsonPath}`);
   const coins = JSON.parse(readFileSync(jsonPath, 'utf8'));
   const excluded = new Set(['usdt','usdc','usd','dai','busd','tusd','usdp','usdd','frax','lusd','susd','gusd','usds','usde','usdf','usdt0','usdtb']);
-  const blacklist = new Set(['eth']);
+  const blacklist = new Set(['eth','xrp']);
   const symbols = coins
     .map(c => (c?.symbol ?? '').toString().toUpperCase())
     .filter(s => s && !excluded.has(s.toLowerCase()) && !blacklist.has(s.toLowerCase()));
@@ -26,9 +26,9 @@ async function main() {
 
   const processor = new BatchProcessor({
     outputDir: outDir,
-    batchSize: 10,
-    delayBetweenScreenshots: 7000,
-    delayBetweenBatches: 20000,
+    batchSize: 8,
+    delayBetweenScreenshots: 4000,
+    delayBetweenBatches: 10000,
     maxConcurrentBrowsers: 2,
   });
 
