@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Output files
+*.csv
+*.json
+*.log
+site/data/
+workflow_runs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+
+# IDE
+.cursor/

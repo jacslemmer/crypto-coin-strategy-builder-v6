@@ -1,0 +1,122 @@
+name: UAT Workflow and Cloudflare Pages Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-workflow-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+
+      - name: Install Playwright (browsers and deps)
+        run: |
+          npm install --no-audit --no-fund playwright
+          npx playwright install --with-deps
+
+      - name: Install Python Pillow (for anonymizer)
+        run: |
+          python3 -m pip install --user --upgrade pip
+          python3 -m pip install --user Pillow
+
+      - name: Run orchestrator (Steps 1–4)
+        env:
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          npm run workflow || true
+
+      - name: Prepare static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          SITE_DIR=site
+          rm -rf "$SITE_DIR"
+          mkdir -p "$SITE_DIR/data"
+          # Copy latest workflow run outputs if present
+          if [ -d workflow_runs ]; then
+            LATEST=$(ls -1t workflow_runs | head -n1 || true)
+            if [ -n "$LATEST" ] && [ -d "workflow_runs/$LATEST" ]; then
+              cp -R "workflow_runs/$LATEST" "$SITE_DIR/data/latest" || true
+            fi
+          fi
+          # If no latest data, publish sample data so UAT has something to view
+          if [ ! -d "$SITE_DIR/data/latest" ]; then
+            mkdir -p "$SITE_DIR/data/latest"
+            # Seed with sample analysis if available
+            if [ -f trend-analysis-results.json ]; then
+              cp trend-analysis-results.json "$SITE_DIR/data/latest/"
+            else
+              # Create a tiny placeholder JSON so listing isn't empty
+              echo '{"info":"No outputs yet. This is a placeholder."}' > "$SITE_DIR/data/latest/placeholder.json"
+            fi
+            # Create a README to explain (single-line printf to avoid YAML indentation issues)
+            printf "No workflow outputs were found from the latest run.\nThis folder includes sample data in /data/latest to demonstrate the expected structure.\n\n- latest/trend-analysis-results.json (if present): Example AI analysis output\n\nRe-run the workflow to populate /data/latest with fresh results.\n" > "$SITE_DIR/data/README.txt"
+          fi
+          # Always create a run-info.json so /data/latest is never empty
+          date -u +'%Y-%m-%dT%H:%M:%SZ' | xargs -I{} sh -c 'echo "{\"generated_at\": \"{}\"}" > "$SITE_DIR/data/latest/run-info.json"'
+          # Ensure at least one file exists before building the listing page
+          date -u +'%Y-%m-%dT%H:%M:%SZ' | xargs -I{} sh -c 'echo "{\"generated_at\": \"{}\"}" > "$SITE_DIR/data/latest/run-info.json"'
+
+          # Build a simple listing page for /data
+          (
+            echo '<!doctype html>'
+            echo '<html><head><meta charset="utf-8" />'
+            echo '<meta name="viewport" content="width=device-width, initial-scale=1" />'
+            echo '<title>Workflow Data</title>'
+            echo '<style>body{font-family:system-ui;padding:24px;max-width:900px;margin:0 auto} code{background:#f5f5f5;padding:2px 6px;border-radius:4px}</style>'
+            echo '</head><body>'
+            echo '<h1>Workflow Data</h1>'
+            if [ -d "$SITE_DIR/data/latest" ]; then
+              echo '<p>Latest run: <code>/data/latest</code></p>'
+              echo '<ul>'
+              # Shallow list
+              (cd "$SITE_DIR/data/latest" && ls -1 | while read -r f; do echo "<li><a href=\"latest/$f\">$f</a></li>"; done)
+              echo '</ul>'
+            else
+              echo '<p>No workflow outputs were found. Re-run the workflow to populate this page.</p>'
+            fi
+            echo '</body></html>'
+          ) > "$SITE_DIR/data/index.html"
+          cat > "$SITE_DIR/index.html" <<'HTML'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>Crypto Strategy Builder V5 - UAT</title>
+              <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;padding:24px;max-width:900px;margin:0 auto}code,pre{background:#f5f5f5;padding:2px 6px;border-radius:4px}</style>
+            </head>
+            <body>
+              <h1>Crypto Strategy Builder V5 - UAT</h1>
+              <p>Latest workflow outputs (if available) are under <code>/data</code>.</p>
+              <ul>
+                <li>Workflow data: <a href="/data/index.html" target="_blank" rel="noopener">Open data folder</a></li>
+              </ul>
+              <p>Data provided by <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a>. Powered by <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener">CoinGecko API</a>.</p>
+            </body>
+          </html>
+          HTML
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CF_PAGES_PROJECT }}
+          directory: site
+          wranglerVersion: '3'
+
+
