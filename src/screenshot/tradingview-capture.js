@@ -17,10 +17,10 @@ const SCREENSHOT_CONFIG = {
     width: 1920,
     height: 1080
   },
-  timeout: 30000, // 30 seconds
+  timeout: 90000, // 90 seconds to reduce navigation timeouts
   retries: 3,
   delay: 2000, // 2 seconds delay after page load
-  chartLoadDelay: 5000, // 5 seconds for chart to fully load
+  chartLoadDelay: 8000, // 8 seconds for chart to fully load
   outputDir: '/Users/jacobuslemmer/Desktop/CLI App testing/screenshots'
 };
 
