@@ -22,7 +22,7 @@ A **clean, simple, and bulletproof** Node.js utility for downloading USDT tradin
 
 ```bash
 # Clone or download the project
-cd crypto-coin-strategy-builder-v5
+cd crypto-coin-strategy-builder-v6
 
 # No dependencies to install!
 # The utility uses only Node.js built-ins
@@ -99,7 +99,7 @@ const DEFAULT_CONFIG = {
 ## 📁 File Structure
 
 ```
-crypto-coin-strategy-builder-v5/
+crypto-coin-strategy-builder-v6/
 ├── download-usdt-pairs.js    # Main utility (bulletproof!)
 ├── package.json              # Minimal package config
 ├── .gitignore               # Clean git ignore

@@ -212,7 +212,7 @@ const fetchCoinsBatch = async (config, page, perPage, retryCount = 0) => {
       headers: {
         'Accept': 'application/json',
         'X-CG-Demo-API-Key': config.apiKey,
-        'User-Agent': 'Crypto-Strategy-Builder-V5/1.0'
+        'User-Agent': 'Crypto-Strategy-Builder-V6/1.0'
       }
     });
     
